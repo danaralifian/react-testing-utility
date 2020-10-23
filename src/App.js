@@ -1,31 +1,26 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import firebase from 'firebase';
 
 import axios from 'axios'
 import { Button } from '@material-ui/core';
 import { GraphQLObjectType, GraphQLID, GraphQLString } from 'graphql';
 import firegraph from 'firegraph'
 import { request, gql, GraphQLClient } from 'graphql-request'
-
-const firebaseConfig = {
-  
-};
-
-firebase.initializeApp(firebaseConfig)
+import TextField from '@material-ui/core/TextField'
 
 function App(props) {
+  const [id, setId] = useState('')
+  const [title, setTitle] = useState('')
 
   const HOST = 'http://localhost:3002/graphql'
   useEffect(()=>{
-    console.log('hello')
-    subscribe()
+
   })
 
   const subscribe = ()=>{
     const subscription = gql`
-      subscription updatedBook($id : String = "J5fzkYFkCdiaH8J8ZffU"){
+      subscription updatedBook($id : String = "${id.toString()}"){
         updatedBook(id : $id){
           title
           author
@@ -98,7 +93,7 @@ function App(props) {
 
   const updateMutation = ()=>{
     const mutation = gql`
-      mutation addBook($id : String = "J5fzkYFkCdiaH8J8ZffU", $title : String = "Lord of the ring", $author : String = "John"){
+      mutation updateBook($id : String = "${id.toString()}", $title : String = "${title.toString()}", $author : String = "John"){
         updateBook(id: $id, title : $title, author : $author){
           title
           author
@@ -113,6 +108,20 @@ function App(props) {
   return (
     <div style={{padding : 20}}>
       <h1 style={{textAlign : 'center'}}>GraphQL Tutor</h1>
+      <TextField
+        id="outlined-required"
+        label="ID "
+        variant="outlined"
+        onChange={(e)=>setId(e.target.value)}
+      />
+      <TextField
+        id="outlined-required"
+        label="Title"
+        variant="outlined"
+        onChange={(e)=>setTitle(e.target.value)}
+      />
+      <br/>
+      <Button color='primary' variant="contained" onClick={subscribe}>Subscribe</Button>
       <Button color='primary' variant="contained" onClick={testGraphQl}>Query</Button>
       <Button color='primary' variant="contained" onClick={createMutation}>Create Mutation</Button>
       <Button color='primary' variant="contained" onClick={updateMutation}>Update Mutation</Button>
