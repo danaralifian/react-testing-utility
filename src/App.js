@@ -12,11 +12,12 @@ import TextField from '@material-ui/core/TextField'
 function App(props) {
   const [id, setId] = useState('')
   const [title, setTitle] = useState('')
+  const [books, setBooks] = useState([])
 
   const HOST = 'http://localhost:3002/graphql'
   useEffect(()=>{
-
-  })
+    queryBooks()
+  }, books)
 
   const subscribe = ()=>{
     const subscription = gql`
@@ -33,7 +34,7 @@ function App(props) {
     .catch(err=>console.log(err))
   }
 
-  const testGraphQl = ()=>{
+  const queryBooks = ()=>{
     const query = gql`
       {
         books {
@@ -45,11 +46,30 @@ function App(props) {
     `
     request(HOST, query)
     .then(res=>{
-      console.log(res)
+      setBooks(res.books)
     })
     .catch(err=>{
       console.log(err)
     })
+  }
+
+  const queryBookId = (bookId)=>{
+    const query = gql`
+        {
+          book(id : "${bookId}"){
+            id
+            title
+            author
+        }
+      }`
+    request(HOST, query)
+    .then(res=>{
+      alert(res.book.id +" => "+ res.book.title +" => "+ res.book.author  )
+    })
+    .catch(err=>{
+      console.log(err)
+    })
+
   }
 
   const postQuery = ()=>{
@@ -87,7 +107,7 @@ function App(props) {
       }
     `
     request(HOST, mutation)
-    .then(res=>console.log(res))
+    .then(res=>queryBooks())
     .catch(err=>console.log(err))
   }
 
@@ -105,9 +125,41 @@ function App(props) {
     .catch(err=>console.log(err))
   }
 
+  const deleteMutation = (bookId)=>{
+    const mutation = gql`
+      mutation deleteBook($id : String = "${bookId}"){
+        deleteBook(id: $id)
+      }
+    `
+    request(HOST, mutation)
+    .then(res=>queryBooks())
+    .catch(err=>console.log(err))
+  }
+
   return (
     <div style={{padding : 20}}>
-      <h1 style={{textAlign : 'center'}}>GraphQL Tutor</h1>
+       <h1 style={{textAlign : 'center'}}>GraphQL Tutor</h1>
+      <div>
+      <table border='1'>
+        <tbody>
+          <tr>
+            <td>Title</td>
+            <td>Author</td>
+            <td>Delete</td>
+            <td>Detail</td>
+          </tr>
+          {books.map((obj,key)=>
+            <tr key={key}>
+              <td>{obj.title}</td>
+              <td>{obj.author}</td>
+              <td><button onClick={deleteMutation.bind(this, obj.id)}>delete</button></td>
+              <td><button onClick={queryBookId.bind(this, obj.id)}>detail</button></td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      </div>
+      <br/>
       <TextField
         id="outlined-required"
         label="ID "
@@ -122,7 +174,7 @@ function App(props) {
       />
       <br/>
       <Button color='primary' variant="contained" onClick={subscribe}>Subscribe</Button>
-      <Button color='primary' variant="contained" onClick={testGraphQl}>Query</Button>
+      <Button color='primary' variant="contained" onClick={queryBooks}>Query All</Button>
       <Button color='primary' variant="contained" onClick={createMutation}>Create Mutation</Button>
       <Button color='primary' variant="contained" onClick={updateMutation}>Update Mutation</Button>
     </div>
